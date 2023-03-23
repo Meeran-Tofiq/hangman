@@ -1,3 +1,5 @@
+require 'pry-byebug'
+
 WORDS = File.readlines('google-10000-english-no-swears.txt', chomp: true)
 GAME_RULES = "This is a game of Hangman!
 
@@ -28,9 +30,10 @@ class Game
             guess = prompt_guess
             player.make_guess(guess)
             
-            board.check_for_win
+            win = board.check_for_win
 
             if board.guesses.length == 7
+                puts "\nYou lost!\n\n"
                 lose = true
             end
         end
@@ -71,7 +74,7 @@ end
 class Board
     attr_reader :board, :guesses, :word
     def initialize(word)
-        @word = word
+        @word = word.split('')
         @board = Array.new(word.length) {"_"}
         @guesses = Array.new
     end
@@ -85,6 +88,7 @@ class Board
 
     def check_for_win
         unless board.include?("_")
+            puts "\n YOU WON! \n\n"
             return true
         end
 
@@ -106,7 +110,8 @@ class Player
             return false
         else
             if board.word.include?(guess)
-                board.board[board.word.index(guess)] = guess.upcase
+                indexes = board.word.each_index.select{|i| board.word[i] == guess}
+                indexes.each {|index| board.board[index] = guess}
             else
                 puts "That is incorrect!"
                 board.guesses << guess
