@@ -8,7 +8,7 @@ The player has 7 tries after which you'd lose. You can play another game after
 that, or leave it.
 
 This game also has the ability of saving, at the beginning you'll be queried f-
-or a file if you want to load that file. Otherwise, you can just play normally."
+or a file if you want to load that file. Otherwise, you can just play normally.\n\n"
 
 class Game
     attr_reader :board, :player
@@ -19,12 +19,20 @@ class Game
     end
 
     def play
-        board.display_board
         win = false
+        lose = false
         puts GAME_RULES
+        
+        until win || lose
+            board.display_board
+            guess = prompt_guess
+            player.make_guess(guess)
+            
+            board.check_for_win
 
-        until win
-            break
+            if board.guesses.length == 7
+                lose = true
+            end
         end
 
         prompt_replay
@@ -46,6 +54,17 @@ class Game
 
         return (replay == 'y' ? true : false)
     end
+
+    def prompt_guess
+        puts "Guess a letter that can be part of the word, and that you haven't guessed yet."
+        guess = gets.chomp.downcase
+
+        until ("a".."z").include?(guess)
+            puts "Your guess must be a letter"
+        end
+
+        guess
+    end
 end
 
 class Board
@@ -53,14 +72,22 @@ class Board
     def initialize(word)
         @word = word
         @board = Array.new(word.length) {"_"}
-        @guesses = Array.new(7) {"O"}
+        @guesses = Array.new
     end
 
     def display_board
         board.each {|letter| print letter + " "}
         puts "\n"
-        guesses.each {|guess| print guess + " " }
+        guesses.each {print "X"}
         puts "\n\n"
+    end
+
+    def check_for_win
+        unless board.include?("_")
+            return true
+        end
+
+        return false
     end
 end
 
@@ -73,14 +100,14 @@ class Player
     def make_guess(guess)
         guess = guess.downcase
 
-        if guesses.include?(guess) || !("a".."z").include?(guess)
+        if board.guesses.include?(guess)
             return false
         else
-            if word.include?(guess)
-                board.board[word.index(guess)] = guess.upcase
+            if board.word.include?(guess)
+                board.board[board.word.index(guess)] = guess.upcase
             else
                 puts "That is incorrect!"
-                board.guesses[board.guesses.index("O")] = "X"
+                board.guesses << guess
             end
         end
 
