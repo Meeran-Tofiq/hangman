@@ -61,6 +61,7 @@ class Game
 
         until ("a".."z").include?(guess)
             puts "Your guess must be a letter"
+            guess = gets.chomp.downcase
         end
 
         guess
@@ -101,6 +102,7 @@ class Player
         guess = guess.downcase
 
         if board.guesses.include?(guess)
+            puts "You've already guessed that letter!"
             return false
         else
             if board.word.include?(guess)
