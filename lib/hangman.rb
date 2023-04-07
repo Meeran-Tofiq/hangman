@@ -26,9 +26,9 @@ module Serializable
     end
 
     def unserialize(string)
-        obj = @@serializer.parse string
+        obj = @@Serializer.parse string
         obj.keys.each do |key|
-            instance_variable_set(obj[key])
+            instance_variable_set(key, obj[key])
         end
     end
 end
@@ -46,6 +46,10 @@ class Game
         win = false
         lose = false
         puts GAME_RULES
+
+        if load?
+            @board.unserialize(load_save)
+        end
         
         until win || lose
             board.display_board
@@ -97,7 +101,6 @@ class Game
         end
 
         @save = (guess == 'save')
-        puts save
 
         guess
     end
@@ -111,6 +114,25 @@ class Game
 
         saves.puts board.serialize
     end
+
+    def load?
+        puts "Do you want to load a previous save file? (load/...)"
+        gets.chomp.downcase == "load"
+    end
+
+    def load_save
+        saves_folder = Dir.open("saves").children
+        puts "Which file do you want to load? "
+        p saves_folder
+        puts "Choose by writing the number of the file you want (#{saves_folder.length} - files available)"
+        
+        unless (answer = gets.chomp.to_i - 1) < saves_folder.length
+            puts "You are exceeding the bounds of the folder"
+        end
+
+        File.read("./saves/" + saves_folder[answer]) 
+    end
+
 end
 
 class Board
