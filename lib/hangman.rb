@@ -123,7 +123,7 @@ class Game
     def load_save
         saves_folder = Dir.open("saves").children
         puts "Which file do you want to load? "
-        p saves_folder
+        puts saves_folder
         puts "Choose by writing the number of the file you want (#{saves_folder.length} - files available)"
         
         unless (answer = gets.chomp.to_i - 1) < saves_folder.length
