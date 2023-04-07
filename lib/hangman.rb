@@ -13,12 +13,33 @@ that, or leave it.
 This game also has the ability of saving, at the beginning you'll be queried f-
 or a file if you want to load that file. Otherwise, you can just play normally.\n\n"
 
+module Serializable
+    @@Serializer = JSON
+
+    def serialize
+        obj = {}
+        instance_variables.map do |var|
+            obj[var] = instance_variable_get(var)
+        end
+
+        @@Serializer.dump obj
+    end
+
+    def unserialize(string)
+        obj = @@serializer.parse string
+        obj.keys.each do |key|
+            instance_variable_set(obj[key])
+        end
+    end
+end
+
 class Game
-    attr_reader :board, :player
+    attr_reader :board, :player, :save, :saves
     def initialize
         @word = self.pick_random_word
         @board = Board.new(@word)
         @player = Player.new(@board)
+        @save = false
     end
 
     def play
@@ -30,6 +51,11 @@ class Game
             board.display_board
             guess = prompt_guess
             player.make_guess(guess)
+
+            if save
+                save_game
+                return
+            end
             
             win = board.check_for_win
 
@@ -60,19 +86,36 @@ class Game
     end
 
     def prompt_guess
-        puts "Guess a letter that can be part of the word, and that you haven't guessed yet."
+        puts "Guess a letter that can be part of the word, and that you haven't guessed yet.
+        If you write SAVE, you will save the game and exit out of it."
+
         guess = gets.chomp.downcase
 
-        until ("a".."z").include?(guess)
+        until ("a".."z").include?(guess) || guess == "save"
             puts "Your guess must be a letter"
             guess = gets.chomp.downcase
         end
 
+        @save = (guess == 'save')
+        puts save
+
         guess
+    end
+
+    def save_game
+        unless Dir.exists? "saves"
+            Dir.mkdir "saves"
+        end
+
+        @saves = File.open("saves/".concat(Time.now.strftime("%d_%m_%Y %H_%M")), "w+")
+
+        saves.puts board.serialize
     end
 end
 
 class Board
+    include Serializable
+
     attr_reader :board, :guesses, :word
     def initialize(word)
         @word = word.split('')
@@ -106,6 +149,10 @@ class Player
     def make_guess(guess)
         guess = guess.downcase
 
+        if guess == "save"
+            return
+        end
+
         if board.guesses.include?(guess)
             puts "You've already guessed that letter!"
             return false
@@ -122,26 +169,6 @@ class Player
         return true
     end
 end    
-
-module Serializable
-    @@Serializer = JSON
-
-    def serialize
-        obj = {}
-        instance_variables.map do |var|
-            obj[var] = instance_variables_get(var)
-        end
-
-        @@serializer.dump obj
-    end
-
-    def unserialize(string)
-        obj = @@serializer.parse string
-        obj.keys.each do |key|
-            instance_variables_set(obj[key])
-        end
-    end
-end
 
 replay = true
 
