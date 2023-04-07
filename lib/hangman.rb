@@ -1,4 +1,5 @@
 require 'pry-byebug'
+require 'json'
 
 WORDS = File.readlines('google-10000-english-no-swears.txt', chomp: true)
 GAME_RULES = "This is a game of Hangman!
@@ -121,6 +122,26 @@ class Player
         return true
     end
 end    
+
+module Serializable
+    @@Serializer = JSON
+
+    def serialize
+        obj = {}
+        instance_variables.map do |var|
+            obj[var] = instance_variables_get(var)
+        end
+
+        @@serializer.dump obj
+    end
+
+    def unserialize(string)
+        obj = @@serializer.parse string
+        obj.keys.each do |key|
+            instance_variables_set(obj[key])
+        end
+    end
+end
 
 replay = true
 
